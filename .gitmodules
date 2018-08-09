@@ -4,3 +4,6 @@
 [submodule "rdfs-contracts"]
 	path = rdfs-contracts
 	url = ubuntu@ps1:/pss/git/rdfs-contracts/
+[submodule "AMO-Contracts"]
+	path = AMO-Contracts
+	url = https://github.com/AMO-Project/AMO-Contracts.git
