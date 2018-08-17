@@ -50,6 +50,8 @@ contract("RDFS Coin Transfer Test", (accounts) => {
         } catch(err) {
             assert(err);
         }
+        await token.transfer(userOne, 1100, {from: owner });
+        await token.transfer(userTwo, 1000, {from: userOne });
     });
 
     it("calling transfer is available only when sender's available balance"
@@ -60,7 +62,7 @@ contract("RDFS Coin Transfer Test", (accounts) => {
 
         let abOfuserOne = await token.availableBalanceOf.call(userOne, { from: userOne });
 
-        assert(40, abOfuserOne.toNumber());
+        assert.equal(40, abOfuserOne.toNumber());
 
         try {
             await token.transfer(userTwo, 50, { from: userOne });
@@ -74,12 +76,12 @@ contract("RDFS Coin Transfer Test", (accounts) => {
         let bOfuserOne = await token.balanceOf(userOne, { from: userOne });
         let bOfuserTwo = await token.balanceOf(userTwo, { from: userTwo });
 
-        assert(50, bOfuserOne.toNumber());
-        assert(50, bOfuserTwo.toNumber());
+        assert.equal(50, bOfuserOne.toNumber());
+        assert.equal(50, bOfuserTwo.toNumber());
 
         abOfuserOne = await token.availableBalanceOf.call(userOne, { from: userOne });
 
-        assert(50, abOfuserOne.toNumber());
+        assert.equal(40, abOfuserOne.toNumber());
     })
 
     it("balance of destination should be same as transferred value",

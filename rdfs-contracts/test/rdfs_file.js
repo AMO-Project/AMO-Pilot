@@ -63,7 +63,7 @@ contract("RDFS File Store/Purchase Test", (accounts) => {
             assert(err);
         }
 
-        assert(fileOwner, await rdfsFile.isOwnedBy.call(hash));
+        assert.equal(fileOwner, await rdfsFile.isOwnedBy.call(hash));
     });
 
     it("calling purchase request is available only when file is in the map",
@@ -84,7 +84,7 @@ contract("RDFS File Store/Purchase Test", (accounts) => {
             assert(err);
         }
 
-        assert(true, rdfsFile.isRequested.call(hash, userTwo), { from: userTwo });
+        assert.equal(true, await rdfsFile.isRequested.call(hash, userTwo), { from: userTwo });
     });
 
     it("calling purchase related functions are available "
@@ -106,7 +106,7 @@ contract("RDFS File Store/Purchase Test", (accounts) => {
             assert(err);
         }
 
-        assert(true, rdfsFile.isRequested.call(hash, userTwo), { from: userTwo });
+        assert.equal(true, await rdfsFile.isRequested.call(hash, userTwo), { from: userTwo });
     });
 
     it("buyer cannot repurchase the file he requested or approved as purchase before",
@@ -140,7 +140,7 @@ contract("RDFS File Store/Purchase Test", (accounts) => {
 
         let depoOfuserOne = await rdfsCoin.depositOf.call(userTwo, { from: userTwo });
 
-        assert(size, depoOfuserOne.toNumber());
+        assert.equal(size, depoOfuserOne.toNumber());
     });
 
     it("after purchae approve, balance of buyer should be correct",

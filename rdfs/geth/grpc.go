@@ -3,8 +3,10 @@ package geth
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"math/big"
+	"reflect"
 )
 
 type ethResponse struct {
@@ -36,17 +38,21 @@ func (rpc *GethRPC) call(method string, target interface{}, params ...interface{
 // Call returns raw response of method call
 func (rpc *GethRPC) Call(method string, params ...interface{}) (json.RawMessage, error) {
 	request := ethRequest{
-		ID:      1,
+		ID:      67,
 		JSONRPC: "2.0",
 		Method:  method,
 		Params:  params,
 	}
-
+	fmt.Println("params :", params)
+	fmt.Println("typeof :")
+	for i := range params {
+		fmt.Println(reflect.TypeOf(params[i]), params[i])
+	}
+	fmt.Println("request :", request)
 	body, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
 	}
-
 	response, err := rpc.Client.Post(rpc.Url, "application/json", bytes.NewBuffer(body))
 	if response != nil {
 		defer response.Body.Close()
@@ -59,16 +65,13 @@ func (rpc *GethRPC) Call(method string, params ...interface{}) (json.RawMessage,
 	if err != nil {
 		return nil, err
 	}
-
-	//	if rpc.Debug
-	//		rpc.log.Println(fmt.Sprintf("%s\nRequest: %s\nResponse: %s\n", method, body, data))
-	//	}
+	fmt.Println("data : ", data)
 
 	resp := new(ethResponse)
 	if err := json.Unmarshal(data, resp); err != nil {
 		return nil, err
 	}
-
+	fmt.Println("resp : ", resp)
 	return resp.Result, nil
 
 }
@@ -122,4 +125,25 @@ func (rpc *GethRPC) EthGetBalance(address string) *big.Int {
 		return big.NewInt(0)
 	}
 	return ParseBigInt(response)
+}
+
+func (rpc *GethRPC) PersonalUnlockAccount(address string, passphrase string, time int) (bool, error) {
+	var response bool
+	fmt.Println(address, passphrase, time)
+	err := rpc.call("personal_unlockAccount", &response, address, passphrase, time)
+	return response, err
+}
+
+func (rpc *GethRPC) EthSendTransaction() (string, error) {
+	var response string
+	var mParams = map[string]string{
+		"from": "0x2074fa38f08facdf47f08b8051f9a6aff6033607",
+		"to":   "0x58c62f2d8ce3d90d9c61b1117680ac0651a774fa",
+		"data": "0x23e3fbd50000000000000000000000002074fa38f08facdf47f08b8051f9a6aff6033607",
+	}
+	err := rpc.call("eth_sendTransaction", &response, mParams)
+	if err != nil {
+		fmt.Println(err, "at grpc")
+	}
+	return response, err
 }

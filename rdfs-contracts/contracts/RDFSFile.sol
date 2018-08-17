@@ -86,7 +86,7 @@ contract RDFSFile {
         token = RDFSCoin(_tokenAddr);
     }
 
-    function storeRequest(bytes32 _hash, string _name, uint32 _size, bytes4 _ip)
+    function storeRequest(bytes32 _hash, string _name, uint256 _size, bytes4 _ip)
         public
         checkDuplicateFile(_hash)
         returns (bool)
@@ -138,6 +138,14 @@ contract RDFSFile {
         files[_hash].buyers[msg.sender] = purchaseState.None;
 
         return true;
+    }
+
+    function getFileName(bytes32 _hash) public view returns (string) {
+        return files[_hash].name;
+    }
+
+    function getFileSize(bytes32 _hash) public view returns (uint256) {
+        return files[_hash].size;
     }
 
     function isOwnedBy(bytes32 _hash) public view returns (address) {
