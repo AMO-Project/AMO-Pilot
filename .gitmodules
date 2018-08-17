@@ -1,6 +1,0 @@
-[submodule "rdfs"]
-	path = rdfs
-	url = ubuntu@ps1:/pss/git/rdfs
-[submodule "rdfs-contracts"]
-	path = rdfs-contracts
-	url = ubuntu@ps1:/pss/git/rdfs-contracts/

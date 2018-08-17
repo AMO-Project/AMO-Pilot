@@ -1,0 +1,19 @@
+[IPFS Nodes]
+ps1: 
+ipfs bootstrap add /ip4/52.79.166.57/tcp/4001/ipfs/QmVYkBUESHdFkA3CUECxNtkXWsar5fquEKzY27uSjQwTM7
+
+ps2: 
+ipfs bootstrap add /ip4/13.125.156.216/tcp/4001/ipfs/QmRW3kkkdhMR3V1wF9s8ERG7jBkpmMVLNpytgoURzFHiDz
+
+ps3: 
+ipfs bootstrap add /ip4/13.209.11.182/tcp/4001/ipfs/QmSnMkWZnw94mPaE1hE1qtzGrDxXx47GHJHP5tbAd9jWgH
+
+[Geth Nodes]
+ps1:
+enode://f3a6f3fc08b54acd267f975992cf267eba873ea777c3e0657da19c387052d67acf6a1dfc7ec8592126d97d5b1b4a797256f96956dd594095c4c4125ee9124bf7@52.79.166.57:30303
+
+ps2:
+enode://65bf4e28a50add726689bbf68b81aaa5554a94ff71b58186679b162680be0aff7d88190520690eab2c911965130fc7a2d99d0cfd45cd1b31c7f96b53b6db27fb@13.125.156.216:30303
+
+ps3:
+enode://f83f778eeb192178e6baeb887f5c0650602b51b9947e8c80f8ed48704bbafb1a0ad6a6ed98e79607470477b20ef23c89bca3f2368179f4dcf762771540142feb@13.209.11.182:30303
