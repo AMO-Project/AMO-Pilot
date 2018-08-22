@@ -91,10 +91,14 @@ contract RDFSFile {
         checkDuplicateFile(_hash)
         returns (bool)
     {
+        /*
         files[_hash].name = _name;
         files[_hash].size = _size;
         files[_hash].owner = Node(msg.sender, _ip);
         files[_hash].exists = true;
+        */
+
+        files[_hash] = File(_name, _size, Node(msg.sender, _ip), true);
 
         return true;
     }
@@ -105,12 +109,12 @@ contract RDFSFile {
         onlyValidBuyer(_hash)
         onlyAllowedAmount(_hash, msg.sender)
         checkDuplicatePurchase(_hash)
-        returns (address, bytes4)
+        returns (bool)
     {
         token.addDeposit(files[_hash].size);
         files[_hash].buyers[msg.sender] = purchaseState.Requested;
 
-        return (files[_hash].owner.addr, files[_hash].owner.ip);
+        return true;
     }
 
     function purchaseApprove(bytes32 _hash)
@@ -152,19 +156,21 @@ contract RDFSFile {
         return files[_hash].owner.addr;
     }
 
-    function isRequested(bytes32 _hash, address buyer)
-        public
-        view
-        returns (bool)
-    {
+    function isRequested(bytes32 _hash, address buyer) public view returns (bool) {
         return files[_hash].buyers[buyer] == purchaseState.Requested;
     }
 
-    function isApproved(bytes32 _hash, address buyer)
-        public
-        view
-        returns (bool)
-    {
+    function isApproved(bytes32 _hash, address buyer) public view returns (bool) {
         return files[_hash].buyers[buyer] == purchaseState.Approved;
+    }
+
+    function getOwnerInfo(bytes32 _hash)
+        public
+        onlyExistingFile(_hash)
+        onlyValidBuyer(_hash)
+        onlyRequestedFile(_hash)
+        view
+        returns (address, bytes4) {
+        return (files[_hash].owner.addr, files[_hash].owner.ip);
     }
 }

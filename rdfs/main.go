@@ -21,14 +21,6 @@ var (
 	IPFS_PID    int = -1
 	IPFS_SHELL  *shell.Shell
 	IPFS_FILES  ipfs.FileList
-	// Address for geth
-	CTRC_COIN    string = "0x58c62f2d8ce3d90d9c61b1117680ac0651a774fa"
-	CTRC_FILE    string = "0x76174989bc2026d845ec487654839973d88345dc"
-	ADDR_ACCOUNT        = map[string]string{
-		"ps1": "0x2074fa38f08facdf47f08b8051f9a6aff6033607",
-		"ps2": "0x28742aaa4f8a4c6fb31e3a3e3fb85355e3b5926b",
-		"ps3": "0x82496a989c83ccd7c58f66934992c3c54f724935",
-	}
 )
 
 func rdfsInit() {
@@ -53,6 +45,7 @@ func rdfsInit() {
 	IPFS_PID = ipfs.Open()
 	IPFS_SHELL = shell.NewShell("localhost:5001")
 	GETH_PID, GETH_CLIENT = geth.Open()
+	GETH_CLIENT.Abi = geth.CallRDFSFileABI()
 
 	go jrpc.InitServer(GETH_KEYS)
 }

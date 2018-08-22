@@ -3,14 +3,18 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"os"
-	"rdfs/crypto"
-	"rdfs/ipfs"
-	"rdfs/util"
 	"strconv"
 	"strings"
+
+	"rdfs/crypto"
+	"rdfs/geth"
+	"rdfs/ipfs"
+	"rdfs/util"
 )
 
 func help() {
@@ -41,6 +45,8 @@ func prompt() {
 			store(cmd_args...)
 		case util.CMD_PURCHASE:
 			purchase(cmd_args...)
+		case util.CMD_PEERFILE:
+			getPeerFile()
 		case util.CMD_TEST:
 
 			if strings.Compare(cmd_args[0], "-k") == 0 {
@@ -67,14 +73,32 @@ func prompt() {
 				fmt.Printf("ECIES TEST: %t\n", bytes.Equal(hash, *dk))
 
 			} else if strings.Compare(cmd_args[0], "-j") == 0 {
-				/*
-					if len(cmd_args) != 4 {
-						break
-					}
-					jrpc.TestB(cmd_args[1], cmd_args[2], cmd_args[3])
-				*/
-			} else if strings.Compare(cmd_args[0], "-g") == 0 {
+				rdfsFileABI := geth.CallRDFSFileABI()
 
+				rawHash := util.MultiHashToBytes("QmNybj8qNJnLL8LRKKanVbZuwV9SCbN4YRXdm7Pwb7mZ6h")
+				hash := [32]byte{}
+				copy(hash[:], rawHash)
+
+				name := "testFile"
+				size := big.NewInt(1000000000000000000)
+				ip := util.GetPublicIP()
+
+				fmt.Printf("0x%x\n", hash)
+
+				data, err := rdfsFileABI.Pack("storeRequest", hash, name, &size, ip)
+
+				if err != nil {
+					fmt.Printf("[-] Error occured: %s\n", err)
+					return
+				}
+				fmt.Printf("%x\n%s\n", data, hex.EncodeToString(data))
+
+				fmt.Printf("%x\n", GETH_KEYS[0].Address)
+
+			} else if strings.Compare(cmd_args[0], "-g") == 0 {
+				test := util.MultiHashToBytes("QmZH5nN342Zcbk2HXPnEPbsavqjqj3pUcFV1S4pWyncYMg")
+				fmt.Printf("%x\n", test)
+				//ipfs.Publish(IPFS_SHELL, "QmNybj8qNJnLL8LRKKanVbZuwV9SCbN4YRXdm7Pwb7mZ6h")
 			}
 
 		case util.CMD_HELP:
@@ -123,17 +147,21 @@ func prompt() {
 			balance := GETH_CLIENT.EthGetBalance(cmd_args[0])
 			fmt.Println(balance)
 		case util.CMD_SENDTX:
-			fmt.Println(ADDR_ACCOUNT["ps1"])
-			fmt.Println(CTRC_COIN)
-			txhash, err := GETH_CLIENT.EthSendTransaction()
+			/*
+				need to re-implement sendTx func if necessary...
 
-			if err != nil {
-				fmt.Println(err, "at prompt")
-			}
-			fmt.Println(txhash)
+				txhash, err := GETH_CLIENT.EthSendTransaction(GETH_KEYS[0].Address.Hex(), geth.ADDR_ACCOUNT["ps2"], "0x23e3fbd5d64162eb51f593bffaa11b223fe337ed5f7e34c0d0fa1a08d1f1cf9d")
+
+				if err != nil {
+					fmt.Println(err)
+				}
+				fmt.Println(txhash)
+			*/
 		case util.CMD_UNLOCK:
-			time, _ := strconv.Atoi(cmd_args[0])
-			response, err := GETH_CLIENT.PersonalUnlockAccount("0x2074fa38f08facdf47f08b8051f9a6aff6033607", "ps1", time)
+			pass := strings.TrimSpace(cmd_args[0])
+			time, _ := strconv.ParseUint(cmd_args[1], 10, 64)
+
+			response, err := GETH_CLIENT.PersonalUnlockAccount(GETH_KEYS[0].Address.Hex(), pass, time)
 			if err != nil {
 				fmt.Println(err)
 			}

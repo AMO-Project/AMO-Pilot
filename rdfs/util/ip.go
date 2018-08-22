@@ -8,19 +8,22 @@ import (
 	"net/http"
 )
 
-func GetPublicIP() (ip []byte) {
+func GetPublicIP() (ip [4]byte) {
 	rsp, err := http.Get("http://checkip.amazonaws.com")
 	if err != nil {
 		fmt.Printf("[-] Error occured: %s\n", err)
-		return nil
+		return [4]byte{}
 	}
 	defer rsp.Body.Close()
 
 	buf, err := ioutil.ReadAll(rsp.Body)
 	if err != nil {
 		fmt.Printf("[-] Error occured: %s\n", err)
-		return nil
+		return [4]byte{}
 	}
 
-	return net.ParseIP(string(bytes.TrimSpace(buf))).To4()
+	ip4byte := [4]byte{}
+	copy(ip4byte[:], net.ParseIP(string(bytes.TrimSpace(buf))).To4())
+
+	return ip4byte
 }

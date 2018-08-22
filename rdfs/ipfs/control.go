@@ -6,6 +6,9 @@ import (
 	"os"
 	"os/exec"
 	"syscall"
+	"time"
+
+	"rdfs/util"
 
 	"github.com/ipfs/go-ipfs-api"
 )
@@ -93,6 +96,44 @@ func Get(shell *shell.Shell, hash string, path string) bool {
 	fmt.Printf("[+] Got %s on %s\n", hash, path)
 
 	return true
+}
+
+func PublishDefaultDir(shell *shell.Shell) bool {
+	hash, err := shell.AddDir(util.RDFS_UP_DIR)
+	if err != nil {
+		fmt.Printf("[-] Error occured: %s\n", err)
+		return false
+	}
+
+	ok := Publish(shell, hash)
+	if ok == false {
+		fmt.Printf("[-] Couldn't publish '%s'\n", hash)
+		return false
+	}
+
+	return true
+}
+
+func Publish(shell *shell.Shell, hash string) bool {
+	resp, err := shell.PublishWithDetails(hash, "", time.Second, time.Second, false)
+	if err != nil {
+		fmt.Printf("[-] Error occured: %s\n", err)
+		return false
+	}
+
+	fmt.Printf("[+] Successfully published to '%s' : '%s'\n", resp.Name, resp.Value)
+
+	return true
+}
+
+func Resolve(shell *shell.Shell, nodeID string) string {
+	resp, err := shell.Resolve(nodeID)
+	if err != nil {
+		//fmt.Printf("[-] Error occured: %s\n", err)
+		return ""
+	}
+
+	return resp
 }
 
 /*

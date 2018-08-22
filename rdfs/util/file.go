@@ -48,7 +48,7 @@ func List(path string) bool {
 	return true
 }
 
-func Copy(from string, to string) bool {
+func CopyFilePath(from string, to string) bool {
 	from_file, err := os.Open(from)
 	if err != nil {
 		return false

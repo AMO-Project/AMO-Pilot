@@ -75,6 +75,12 @@ func purchase(args ...string) bool {
 	// function purchaseRequest(bytes32 _hash)
 	fmt.Printf("[+] Request purchase by sending token with EFH to contract\n")
 
+	nodeAddr := GETH_KEYS[0].Address.Hex()
+	encyptedFileHashBytes := util.MultiHashToBytes(args[0])
+	GETH_CLIENT.PurchaseRequest(nodeAddr, encyptedFileHashBytes)
+	//	hashed := util.MultiHashToBytes(args[0])
+	//	GETH_CLIENT.PurchaseRequest(hashed)
+
 	// ownerAddr, ownerIP := geth.PurchaseRequest(args[0])
 	//if ownerAddr == nil {
 	//	return fasle

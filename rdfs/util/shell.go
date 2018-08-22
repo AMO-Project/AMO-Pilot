@@ -6,6 +6,7 @@ const (
 	CMD_PURCHASE = iota
 	CMD_STORE
 	CMD_LIST
+	CMD_PEERFILE
 	CMD_TEST
 	CMD_HELP
 	CMD_EXIT
@@ -27,6 +28,8 @@ var CMD = map[int]string{
 	CMD_LIST: "ls <option> <hash>" +
 		":show all of the files stored within the given hash recursively. " +
 		"(option) -f for local files / -h for hash files",
+	CMD_PEERFILE: "peerfile" +
+		":show all of files belonging to client's peers.",
 	CMD_TEST: "test" +
 		":test codes for debugging",
 	CMD_HELP: "help" +
@@ -48,9 +51,9 @@ var CMD = map[int]string{
 	CMD_ACCOUNTS: "accounts" +
 		":return a list of addresses owned by client.",
 	CMD_SENDTX: "sendtx" +
-		":send transaction.",
-	CMD_UNLOCK: "unlock <address> <passphrase> <time>" +
-		":unlock accounts",
+		":send transaction.(unsupported yet)",
+	CMD_UNLOCK: "unlock <passphrase> <time>" +
+		":unlock current client's account",
 }
 
 func Shell(cmdln string) (int, []string) {
@@ -63,6 +66,8 @@ func Shell(cmdln string) (int, []string) {
 	case 1:
 		if strings.Compare(args[0], "exit") == 0 {
 			return CMD_EXIT, nil
+		} else if strings.Compare(args[0], "peerfile") == 0 {
+			return CMD_PEERFILE, nil
 		} else if strings.Compare(args[0], "help") == 0 {
 			return CMD_HELP, nil
 		} else if strings.Compare(args[0], "netversion") == 0 {
@@ -89,14 +94,14 @@ func Shell(cmdln string) (int, []string) {
 			return CMD_BALANCE, args[1:]
 		} else if strings.Compare(args[0], "test") == 0 {
 			return CMD_TEST, args[1:]
-		} else if strings.Compare(args[0], "unlock") == 0 {
-			return CMD_UNLOCK, args[1:]
 		}
 	case 3:
 		if strings.Compare(args[0], "ls") == 0 {
 			return CMD_LIST, args[1:]
 		} else if strings.Compare(args[0], "purchase") == 0 {
 			return CMD_PURCHASE, args[1:]
+		} else if strings.Compare(args[0], "unlock") == 0 {
+			return CMD_UNLOCK, args[1:]
 		}
 	case 5:
 		if strings.Compare(args[0], "test") == 0 {

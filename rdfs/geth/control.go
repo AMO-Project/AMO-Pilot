@@ -9,11 +9,14 @@ import (
 	"time"
 
 	"rdfs/util"
+
+	"github.com/ethereum/go-ethereum/accounts/abi"
 )
 
 type GethRPC struct {
 	Url    string
 	Client http.Client
+	Abi    *abi.ABI
 }
 
 func Open() (int, *GethRPC) {
@@ -21,7 +24,7 @@ func Open() (int, *GethRPC) {
 		"--datadir="+util.GETH_DATA_DIR,
 		"--networkid=208518",
 		"--rpc", "--rpcaddr=0.0.0.0",
-		"--rpcapi='admin,db,eth,net,web3,miner,personal'")
+		"--rpcapi='db,eth,net,web3,personal,miner,web3'")
 
 	err := cmd.Start()
 

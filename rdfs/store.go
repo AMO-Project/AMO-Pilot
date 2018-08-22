@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"os"
 	"rdfs/crypto"
 	"rdfs/ipfs"
@@ -60,14 +61,14 @@ func store(args ...string) bool {
 
 	filePath := strings.Split(args[0], "/")
 	fileName := filePath[len(filePath)-1]
-	//fileSize := len(f)
+	fileSize := big.NewInt(int64(len(f)))
 
-	if ok := util.Copy(args[0], util.RDFS_UP_DIR+fileName); !ok {
-		fmt.Printf("[-] Couldn't copy file to %s(RDFS_UP_DIR)\n", util.RDFS_UP_DIR)
-		return false
-	}
-
-	fmt.Printf("[+] Copied file to  %s(RDFS_UP_DIR)\n", util.RDFS_UP_DIR)
+	/*
+		if ok := util.Copy(args[0], util.RDFS_UP_DIR+fileName); !ok {
+			fmt.Printf("[-] Couldn't copy file to %s(RDFS_UP_DIR)\n", util.RDFS_UP_DIR)
+			return false
+		}
+	*/
 
 	// 1. ek = hash(pk, sk, F)
 	encryptionKey := crypto.GenerateHashKey(privKey, pubKey, &f)
@@ -84,17 +85,37 @@ func store(args ...string) bool {
 
 	fmt.Printf("[+] Added to IPFS '%s': '%s'\n", args[0], encyptedFileHash)
 
-	/* 4. Write ownership(EFH, nodeID) and information(EF size, Owner IP) on contract
-	 *
-	 * function storeRequest(bytes32 _hash, string _name, uint256 _size, bytes4 _ip)
-	 */
-
+	// 4. Write ownership(EFH, nodeID) and information(EF size, Owner IP) on contract
 	encyptedFileHashBytes := util.MultiHashToBytes(encyptedFileHash)
-	//nodeIP := util.GetPublicIP()
 
-	ok := IPFS_FILES.SetFileInfo(encyptedFileHashBytes, fileName, pubKey, encryptionKey)
-	if ok == false {
+	nodeIP := util.GetPublicIP()
+	nodeAddr := GETH_KEYS[0].Address.Hex()
+
+	reqOk := GETH_CLIENT.StoreRequest(nodeAddr, encyptedFileHashBytes, fileName, fileSize, nodeIP)
+	if reqOk == false {
+		fmt.Printf("[-] Couldn't request storing file\n")
+		return false
+	}
+
+	setOk := IPFS_FILES.SetFileInfo(encyptedFileHashBytes, fileName, pubKey, encryptionKey)
+	if setOk == false {
 		fmt.Printf("[-] Couldn't save file's information\n")
+		return false
+	}
+
+	err = ioutil.WriteFile(util.RDFS_UP_DIR+fileName, *encryptedFile, 0666)
+	if err != nil {
+		fmt.Printf("[-] Couldn't copy file to '%s' (RDFS_UP_DIR)\n", util.RDFS_UP_DIR)
+		return false
+	}
+
+	fmt.Printf("[+] Copied file to '%s' (RDFS_UP_DIR)\n", util.RDFS_UP_DIR)
+
+	// ipfs add -r /pss/rdfs/up => hash
+	// ipfs name publish hash
+	ok := ipfs.PublishDefaultDir(IPFS_SHELL)
+	if ok == false {
+		return false
 	}
 
 	return true
