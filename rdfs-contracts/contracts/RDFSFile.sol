@@ -1,7 +1,7 @@
 pragma solidity ^0.4.2;
 
 import "./RDFSCoin.sol";
-import "zeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract RDFSFile {
     using SafeMath for uint256;
@@ -56,8 +56,8 @@ contract RDFSFile {
     }
 
     // check if msg.sender has already bought the file with given _hash
-    modifier checkDuplicatePurchase(bytes32 _hash) {
-        require(files[_hash].buyers[msg.sender] == purchaseState.None);
+    modifier checkDuplicatePurchase(bytes32 _hash, address target) {
+        require(files[_hash].buyers[target] == purchaseState.None);
         _;
     }
 
@@ -66,13 +66,13 @@ contract RDFSFile {
         _;
     }
 
-    modifier onlyRequestedFile(bytes32 _hash) {
-        require(files[_hash].buyers[msg.sender] == purchaseState.Requested);
+    modifier onlyRequestedFile(bytes32 _hash, address target) {
+        require(files[_hash].buyers[target] == purchaseState.Requested);
         _;
     }
 
-    modifier onlyValidBuyer(bytes32 _hash) {
-        require(files[_hash].owner.addr != msg.sender);
+    modifier onlyValidBuyer(bytes32 _hash, address target) {
+        require(files[_hash].owner.addr != target);
         _;
     }
 
@@ -91,13 +91,6 @@ contract RDFSFile {
         checkDuplicateFile(_hash)
         returns (bool)
     {
-        /*
-        files[_hash].name = _name;
-        files[_hash].size = _size;
-        files[_hash].owner = Node(msg.sender, _ip);
-        files[_hash].exists = true;
-        */
-
         files[_hash] = File(_name, _size, Node(msg.sender, _ip), true);
 
         return true;
@@ -106,9 +99,9 @@ contract RDFSFile {
     function purchaseRequest(bytes32 _hash)
         public
         onlyExistingFile(_hash)
-        onlyValidBuyer(_hash)
+        onlyValidBuyer(_hash, msg.sender)
         onlyAllowedAmount(_hash, msg.sender)
-        checkDuplicatePurchase(_hash)
+        checkDuplicatePurchase(_hash, msg.sender)
         returns (bool)
     {
         token.addDeposit(files[_hash].size);
@@ -120,12 +113,11 @@ contract RDFSFile {
     function purchaseApprove(bytes32 _hash)
         public
         onlyExistingFile(_hash)
-        onlyValidBuyer(_hash)
-        onlyRequestedFile(_hash)
+        onlyValidBuyer(_hash, msg.sender)
+        onlyRequestedFile(_hash, msg.sender)
         returns (bool)
     {
         token.transferDepositTo(files[_hash].owner.addr, files[_hash].size);
-
         files[_hash].buyers[msg.sender] = purchaseState.Approved;
 
         return true;
@@ -134,8 +126,8 @@ contract RDFSFile {
     function purchaseAbandon(bytes32 _hash)
         public
         onlyExistingFile(_hash)
-        onlyValidBuyer(_hash)
-        onlyRequestedFile(_hash)
+        onlyValidBuyer(_hash, msg.sender)
+        onlyRequestedFile(_hash, msg.sender)
         returns (bool)
     {
         token.subDeposit(files[_hash].size);
@@ -167,10 +159,12 @@ contract RDFSFile {
     function getOwnerInfo(bytes32 _hash)
         public
         onlyExistingFile(_hash)
-        onlyValidBuyer(_hash)
-        onlyRequestedFile(_hash)
+        onlyValidBuyer(_hash, msg.sender)
         view
         returns (address, bytes4) {
-        return (files[_hash].owner.addr, files[_hash].owner.ip);
+    
+		require(files[_hash].buyers[msg.sender] != purchaseState.None);    
+	
+		return (files[_hash].owner.addr, files[_hash].owner.ip);
     }
 }

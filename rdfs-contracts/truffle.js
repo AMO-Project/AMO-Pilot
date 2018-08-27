@@ -16,16 +16,18 @@ module.exports = {
 	networks: {
 		development: {
 			host: "127.0.0.1",
-			port: 8545,
-			network_id: "*"
+			port: 9545,
+			network_id: "*",
+			gas: 3000000,
+			gasPrice : 10000000
 		},
 		rdfs: {
 			host: "127.0.0.1",
 			port: 8545,
 			network_id: 208518,
+			from: "0x1d8582d7d5c85a9b65d9beee856f5408aae96215",
 			gas: 3000000,
-			gasPrice : 10000000,
-			from : "0x2074fa38f08facdf47f08b8051f9a6aff6033607"
+			gasPrice : 10000000
 		}
 	}
 };

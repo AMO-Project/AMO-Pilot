@@ -11,8 +11,8 @@ import (
 
 // Address for geth
 const (
-	CTRC_COIN = "0xda569df17e14ae6a865d299239646c7906d41e10"
-	CTRC_FILE = "0x508be8c23bc05e8c3bb56b07a9caa0d364bbbaed"
+	CTRC_COIN = "0x07f4116305433d6614d75b184b9421270fb0e7bb"
+	CTRC_FILE = "0x0ea5e483bb8174c246714314ee6d3f25ff3fa48f"
 )
 
 var (
