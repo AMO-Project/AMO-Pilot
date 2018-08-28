@@ -58,7 +58,7 @@ contract("RDFS Coin Transfer Test", (accounts) => {
         + "(balances[sender] - deposit[sender]) is bigger than sending value",
         async() => {
         await token.transfer(userOne, 100, { from: owner });
-        await token.addDeposit(60, { from: userOne });
+        await token.addDeposit(userOne, 60, { from: userOne });
 
         let abOfuserOne = await token.availableBalanceOf.call(userOne, { from: userOne });
 
@@ -71,7 +71,7 @@ contract("RDFS Coin Transfer Test", (accounts) => {
             assert(err);
         }
 
-        await token.transferDepositTo(userTwo, 50, { from: userOne });
+        await token.transferDepositTo(userOne, userTwo, 50, { from: userOne });
 
         let bOfuserOne = await token.balanceOf(userOne, { from: userOne });
         let bOfuserTwo = await token.balanceOf(userTwo, { from: userTwo });

@@ -57,7 +57,7 @@ contract RDFSCoin is StandardToken, Ownable {
     function transfer(address to, uint256 value)
         public
         onlyValidDestination(to)
-        onlyAllowedAmount(tx.origin, value)
+        onlyAllowedAmount(msg.sender, value)
         returns (bool)
     {
         return super.transfer(to, value);
@@ -72,33 +72,33 @@ contract RDFSCoin is StandardToken, Ownable {
         return super.transferFrom(from, to, value);
     }
 
-    function transferDepositTo(address to, uint256 value)
+    function transferDepositTo(address from, address to, uint256 value)
         public
         onlyValidDestination(to)
         returns (bool)
     {
-        require(deposit[tx.origin].sub(value) >= 0);
+        require(deposit[from].sub(value) >= 0);
 
         // release and transfer deposit from 'from' address to 'to' address
-        balances[tx.origin] = balances[tx.origin].sub(value);
-        deposit[tx.origin] = deposit[tx.origin].sub(value);
+        balances[from] = balances[from].sub(value);
+        deposit[from] = deposit[from].sub(value);
         balances[to] = balances[to].add(value);
 
-        emit Transfer(tx.origin, to, value);
+        emit Transfer(from, to, value);
         return true;
     }
 
-    function addDeposit(uint256 value) public returns (bool) {
-        require(balances[tx.origin].sub(deposit[tx.origin]) >= value);
+    function addDeposit(address from, uint256 value) public returns (bool) {
+        require(balances[from].sub(deposit[from]) >= value);
 
-        deposit[tx.origin] = deposit[tx.origin].add(value);
+        deposit[from] = deposit[from].add(value);
         return true;
     }
 
-    function subDeposit(uint256 value) public returns (bool) {
-        require(deposit[tx.origin].sub(value) >= 0);
+    function subDeposit(address from, uint256 value) public returns (bool) {
+        require(deposit[from].sub(value) >= 0);
 
-        deposit[tx.origin] = deposit[tx.origin].sub(value);
+        deposit[from] = deposit[from].sub(value);
         return true;
     }
 

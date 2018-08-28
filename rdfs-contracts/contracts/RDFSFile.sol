@@ -104,7 +104,7 @@ contract RDFSFile {
         checkDuplicatePurchase(_hash, msg.sender)
         returns (bool)
     {
-        token.addDeposit(files[_hash].size);
+        token.addDeposit(msg.sender, files[_hash].size);
         files[_hash].buyers[msg.sender] = purchaseState.Requested;
 
         return true;
@@ -117,7 +117,7 @@ contract RDFSFile {
         onlyRequestedFile(_hash, msg.sender)
         returns (bool)
     {
-        token.transferDepositTo(files[_hash].owner.addr, files[_hash].size);
+        token.transferDepositTo(msg.sender, files[_hash].owner.addr, files[_hash].size);
         files[_hash].buyers[msg.sender] = purchaseState.Approved;
 
         return true;
@@ -130,7 +130,7 @@ contract RDFSFile {
         onlyRequestedFile(_hash, msg.sender)
         returns (bool)
     {
-        token.subDeposit(files[_hash].size);
+        token.subDeposit(msg.sender, files[_hash].size);
         files[_hash].buyers[msg.sender] = purchaseState.None;
 
         return true;
@@ -162,9 +162,9 @@ contract RDFSFile {
         onlyValidBuyer(_hash, msg.sender)
         view
         returns (address, bytes4) {
-    
-		require(files[_hash].buyers[msg.sender] != purchaseState.None);    
-	
+
+		require(files[_hash].buyers[msg.sender] != purchaseState.None);
+
 		return (files[_hash].owner.addr, files[_hash].owner.ip);
     }
 }
