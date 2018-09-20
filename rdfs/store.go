@@ -59,16 +59,15 @@ func store(args ...string) bool {
 		return false
 	}
 
+	// Ignonre file(0 byte)
+	if len(f) < 1 {
+		fmt.Printf("[-] Cannot store a file with %d bytes size\n", len(f))
+		return false
+	}
+
 	filePath := strings.Split(args[0], "/")
 	fileName := filePath[len(filePath)-1]
 	fileSize := big.NewInt(int64(len(f)))
-
-	/*
-		if ok := util.Copy(args[0], util.RDFS_UP_DIR+fileName); !ok {
-			fmt.Printf("[-] Couldn't copy file to %s(RDFS_UP_DIR)\n", util.RDFS_UP_DIR)
-			return false
-		}
-	*/
 
 	// 1. ek = hash(pk, sk, F)
 	encryptionKey := crypto.GenerateHashKey(privKey, pubKey, &f)
@@ -85,20 +84,18 @@ func store(args ...string) bool {
 
 	fmt.Printf("[+] Added to IPFS '%s': '%s'\n", args[0], encyptedFileHash)
 
-	// 4. Write ownership(EFH, nodeID) and information(EF size, Owner IP) on contract
 	encyptedFileHashBytes := util.MultiHashToBytes(encyptedFileHash)
-
 	nodeIP := util.GetPublicIP()
-	nodeAddr := GETH_KEYS[0].Address.Hex()
 
-	reqOk := GETH_CLIENT.StoreRequest(nodeAddr, encyptedFileHashBytes, fileName, fileSize, nodeIP)
-	if reqOk == false {
+	// 4. Write ownership(EFH, nodeID) and information(EF size, Owner IP) on contract
+	ok := GETH_CLIENT.StoreRequest(GETH_KEYS[0], encyptedFileHashBytes, fileName, fileSize, nodeIP)
+	if !ok {
 		fmt.Printf("[-] Couldn't request storing file\n")
 		return false
 	}
 
-	setOk := IPFS_FILES.SetFileInfo(encyptedFileHashBytes, fileName, pubKey, encryptionKey)
-	if setOk == false {
+	ok = IPFS_FILES.SetFileInfo(encyptedFileHashBytes, fileName, pubKey, encryptionKey)
+	if !ok {
 		fmt.Printf("[-] Couldn't save file's information\n")
 		return false
 	}
@@ -111,10 +108,10 @@ func store(args ...string) bool {
 
 	fmt.Printf("[+] Copied file to '%s' (RDFS_UP_DIR)\n", util.RDFS_UP_DIR)
 
-	// ipfs add -r /pss/rdfs/up => hash
-	// ipfs name publish hash
-	ok := ipfs.PublishDefaultDir(IPFS_SHELL)
-	if ok == false {
+	// ipfs add -r /pss/rdfs/up => <hash>
+	// ipfs name publish <hash>
+	ok = ipfs.PublishDefaultDir(IPFS_SHELL)
+	if !ok {
 		return false
 	}
 

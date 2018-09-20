@@ -5,6 +5,7 @@ import "strings"
 const (
 	CMD_PURCHASE = iota
 	CMD_STORE
+	CMD_TOKENBAL
 	CMD_LIST
 	CMD_PEERFILE
 	CMD_TEST
@@ -14,7 +15,7 @@ const (
 	CMD_COINBASE
 	CMD_ISMINING
 	CMD_BLOCKNUMBER
-	CMD_BALANCE
+	CMD_ETHBALANCE
 	CMD_ACCOUNTS
 	CMD_SENDTX
 	CMD_UNLOCK
@@ -25,6 +26,8 @@ var CMD = map[int]string{
 		":purchase an item with hash, saved in " + RDFS_DOWN_DIR,
 	CMD_STORE: "store <path>" +
 		":store an item with file(dir) path, copied into " + RDFS_UP_DIR,
+	CMD_TOKENBAL: "tokenbal <address>" +
+		":return the token balance of the given <address>",
 	CMD_LIST: "ls <option> <hash>" +
 		":show all of the files stored within the given hash recursively. " +
 		"(option) -f for local files / -h for hash files",
@@ -45,8 +48,8 @@ var CMD = map[int]string{
 		":return true if client is actively mining.",
 	CMD_BLOCKNUMBER: "blocknumber" +
 		":return the number of most recent block.",
-	CMD_BALANCE: "balance <address> " +
-		":return the balance of the account of given <address> in wei. " +
+	CMD_ETHBALANCE: "ethbal <address> " +
+		":return the ethereum balance of the given <address> in wei. " +
 		"Based on latest block.",
 	CMD_ACCOUNTS: "accounts" +
 		":return a list of addresses owned by client.",
@@ -88,10 +91,12 @@ func Shell(cmdln string) (int, []string) {
 			return CMD_STORE, args[1:]
 		} else if strings.Compare(args[0], "purchase") == 0 {
 			return CMD_PURCHASE, args[1:]
+		} else if strings.Compare(args[0], "tokenbal") == 0 {
+			return CMD_TOKENBAL, args[1:]
 		} else if strings.Compare(args[0], "ls") == 0 {
 			return CMD_LIST, args[1:]
-		} else if strings.Compare(args[0], "balance") == 0 {
-			return CMD_BALANCE, args[1:]
+		} else if strings.Compare(args[0], "ethbal") == 0 {
+			return CMD_ETHBALANCE, args[1:]
 		} else if strings.Compare(args[0], "test") == 0 {
 			return CMD_TEST, args[1:]
 		}
@@ -100,7 +105,9 @@ func Shell(cmdln string) (int, []string) {
 			return CMD_LIST, args[1:]
 		} else if strings.Compare(args[0], "purchase") == 0 {
 			return CMD_PURCHASE, args[1:]
-		} else if strings.Compare(args[0], "unlock") == 0 {
+		}
+	case 4:
+		if strings.Compare(args[0], "unlock") == 0 {
 			return CMD_UNLOCK, args[1:]
 		}
 	case 5:

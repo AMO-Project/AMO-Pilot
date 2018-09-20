@@ -104,8 +104,10 @@ contract RDFSFile {
         checkDuplicatePurchase(_hash, msg.sender)
         returns (bool)
     {
-        token.addDeposit(msg.sender, files[_hash].size);
-        files[_hash].buyers[msg.sender] = purchaseState.Requested;
+		File storage file = files[_hash];
+        token.addDeposit(msg.sender, file.size);
+ 		// files[_hash].buyers[msg.sender] = purchaseState.Requested;
+		file.buyers[msg.sender] = purchaseState.Requested;
 
         return true;
     }

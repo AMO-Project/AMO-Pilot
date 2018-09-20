@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"syscall"
-	"time"
 
 	"rdfs/util"
 
@@ -115,13 +114,19 @@ func PublishDefaultDir(shell *shell.Shell) bool {
 }
 
 func Publish(shell *shell.Shell, hash string) bool {
-	resp, err := shell.PublishWithDetails(hash, "", time.Second, time.Second, false)
+	nodeID, err := shell.ID()
 	if err != nil {
 		fmt.Printf("[-] Error occured: %s\n", err)
 		return false
 	}
 
-	fmt.Printf("[+] Successfully published to '%s' : '%s'\n", resp.Name, resp.Value)
+	err = shell.Publish("/ipfs/"+hash, "/ipns/"+nodeID.ID)
+	if err != nil {
+		fmt.Printf("[-] Error occured: %s\n", err)
+		return false
+	}
+
+	fmt.Printf("[+] Successfully published %s(%s) to '%s'\n", hash, util.RDFS_UP_DIR, nodeID.ID)
 
 	return true
 }

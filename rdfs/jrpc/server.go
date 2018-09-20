@@ -1,6 +1,8 @@
 package jrpc
 
 import (
+	"encoding/hex"
+	"errors"
 	"fmt"
 	"net"
 	"net/rpc"
@@ -8,6 +10,7 @@ import (
 	"strings"
 
 	"rdfs/crypto"
+	"rdfs/geth"
 	"rdfs/ipfs"
 	"rdfs/util"
 
@@ -16,6 +19,7 @@ import (
 )
 
 var GETH_KEYS []*keystore.Key
+var GETH_CLIENT *geth.GethRPC
 
 type Args struct{ A, B int }
 type Result int
@@ -41,30 +45,46 @@ type InfoToReturn struct {
 
 type Crypto int
 
+func (t *Crypto) VitalSign(unused int, info *[]byte) error {
+	response, err := hex.DecodeString("53746179696e2720416c697665")
+	if err != nil {
+		return err
+	}
+
+	*info = response
+	return nil
+}
+
 func (t *Crypto) Encrypt(file FileToRequest, info *InfoToReturn) error {
 
-	fmt.Printf("[+] Validating requested purchase\n")
+	fmt.Printf("\r[+] Validating purchase request/approve\n")
 
-	/*
-		Checking transaction process here
-	*/
+	requested := GETH_CLIENT.IsRequested(GETH_KEYS[0].Address.String(), file.Hash, file.Address)
+	approved := GETH_CLIENT.IsApproved(GETH_KEYS[0].Address.String(), file.Hash, file.Address)
 
-	fmt.Printf("[+] RPC Server: Encrypting DK with buyer's PK\n")
+	if !requested && !approved {
+		fmt.Printf("\r[-] RPC Server: Cannot validate purchase request/approve\n>> ")
+		return errors.New("Cannot validate purchase request/approve")
+	}
+
+	fmt.Printf("\r[+] Purchase Record: requested='%t', approved='%t'... Validated!\n>> ", requested, approved)
+	fmt.Printf("\r[+] RPC Server: Encrypting DK with buyer's PK\n>> ")
 
 	// Encrpyting decryption key with public key here
 	pubKey := crypto.ECDSADecode(file.PubKey)
 
 	decryptionKey := ipfs.GetFileDecryptionKey(file.Hash, GETH_KEYS[0].PrivateKey)
-	info.EncryptedDecryptionKey = *crypto.ECIESEncrypt(pubKey, decryptionKey)
+	(*info).EncryptedDecryptionKey = *crypto.ECIESEncrypt(pubKey, decryptionKey)
 
 	// Adding file's name
-	info.Name = ipfs.GetFileName(file.Hash)
+	(*info).Name = ipfs.GetFileName(file.Hash)
 
 	return nil
 }
 
-func InitServer(keys []*keystore.Key) {
+func InitServer(keys []*keystore.Key, client *geth.GethRPC) {
 	GETH_KEYS = keys
+	GETH_CLIENT = client
 
 	arith := new(Arith)
 	crypto := new(Crypto)
@@ -79,15 +99,15 @@ func InitServer(keys []*keystore.Key) {
 	listener, err := net.Listen("tcp", ":"+util.JSON_RPC_PORT)
 
 	if err != nil {
-		fmt.Printf("[-] RPC Server: Listen error: %s\n", err)
+		fmt.Printf("\r[-] RPC Server: Listen error: %s\n>> ", err)
 	}
 
 	for {
 		if conn, err := listener.Accept(); err != nil {
-			fmt.Printf("[-] RPC Server: Accept error: %s\n", err.Error())
+			fmt.Printf("\r[-] RPC Server: Accept error: %s\n>> ", err.Error())
 		} else {
 			addr := strings.Split(conn.RemoteAddr().String(), ":")[0]
-			fmt.Printf("[+] RPC Server: New connection (%s) established\n", addr)
+			fmt.Printf("\r[+] RPC Server: New connection (%s) established\n>> ", addr)
 
 			go server.ServeCodec(jsonrpc.NewServerCodec(conn))
 		}

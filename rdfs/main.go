@@ -45,9 +45,10 @@ func rdfsInit() {
 	IPFS_PID = ipfs.Open()
 	IPFS_SHELL = shell.NewShell("localhost:5001")
 	GETH_PID, GETH_CLIENT = geth.Open()
-	GETH_CLIENT.Abi = geth.CallRDFSFileABI()
+	GETH_CLIENT.CoinABI = geth.CallRDFSCoinABI()
+	GETH_CLIENT.FileABI = geth.CallRDFSFileABI()
 
-	go jrpc.InitServer(GETH_KEYS)
+	go jrpc.InitServer(GETH_KEYS, GETH_CLIENT)
 }
 
 func rdfsClose() {

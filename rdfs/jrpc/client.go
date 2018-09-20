@@ -8,8 +8,30 @@ import (
 	"rdfs/util"
 )
 
-func RequestEDK(destIP []byte, file FileToRequest, info *InfoToReturn) bool {
-	destAddr := net.IP(destIP).String()
+func IsAlive(destIP [4]byte, info *[]byte) bool {
+	destAddr := util.EncodeIP(destIP)
+	client, err := net.Dial("tcp", destAddr+":"+util.JSON_RPC_PORT)
+
+	if err != nil {
+		fmt.Printf("[-] RPC Client: Dial error: %s\n", err)
+		return false
+	}
+
+	c := jsonrpc.NewClient(client)
+	defer c.Close()
+
+	err = c.Call("Crypto.VitalSign", 0, info)
+
+	if err != nil {
+		fmt.Printf("[-] RPC Client: Encryption error: %s\n", err)
+		return false
+	}
+
+	return true
+}
+
+func RequestEDK(destIP [4]byte, file FileToRequest, info *InfoToReturn) bool {
+	destAddr := util.EncodeIP(destIP)
 	client, err := net.Dial("tcp", destAddr+":"+util.JSON_RPC_PORT)
 
 	if err != nil {

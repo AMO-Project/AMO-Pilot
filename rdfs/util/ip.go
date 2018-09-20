@@ -27,3 +27,7 @@ func GetPublicIP() (ip [4]byte) {
 
 	return ip4byte
 }
+
+func EncodeIP(rawIP [4]byte) string {
+	return net.IPv4(rawIP[0], rawIP[1], rawIP[2], rawIP[3]).String()
+}

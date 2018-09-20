@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"rdfs/crypto"
 	"rdfs/geth"
@@ -45,6 +46,8 @@ func prompt() {
 			store(cmd_args...)
 		case util.CMD_PURCHASE:
 			purchase(cmd_args...)
+		case util.CMD_TOKENBAL:
+			GETH_CLIENT.TokenBalance(GETH_KEYS[0].Address.String(), GETH_KEYS[0].Address)
 		case util.CMD_PEERFILE:
 			getPeerFile()
 		case util.CMD_TEST:
@@ -54,7 +57,7 @@ func prompt() {
 				//f, err := ioutil.ReadFile("/home/h0n9/dev/tmp/go-ipfs_v0.4.15_linux-amd64.tar.gz")
 				if err != nil {
 					fmt.Printf("[-] Error occured: %s\n", err)
-					return
+					break
 				}
 
 				privKey := GETH_KEYS[0].PrivateKey
@@ -72,6 +75,8 @@ func prompt() {
 
 				fmt.Printf("ECIES TEST: %t\n", bytes.Equal(hash, *dk))
 
+			} else if strings.Compare(cmd_args[0], "-pub") == 0 {
+				ipfs.PublishDefaultDir(IPFS_SHELL)
 			} else if strings.Compare(cmd_args[0], "-j") == 0 {
 				rdfsFileABI := geth.CallRDFSFileABI()
 
@@ -79,26 +84,86 @@ func prompt() {
 				hash := [32]byte{}
 				copy(hash[:], rawHash)
 
-				name := "testFile"
-				size := big.NewInt(1000000000000000000)
-				ip := util.GetPublicIP()
+				//name := "testFile"
+				//size := big.NewInt(1000000000000000000)
+				//ip := util.GetPublicIP()
 
 				fmt.Printf("0x%x\n", hash)
 
-				data, err := rdfsFileABI.Pack("storeRequest", hash, name, &size, ip)
+				//data, err := rdfsFileABI.Pack("storeRequest", hash, name, &size, ip)
 
+				data, err := rdfsFileABI.Pack("purchaseRequest", hash)
 				if err != nil {
 					fmt.Printf("[-] Error occured: %s\n", err)
-					return
+					break
 				}
 				fmt.Printf("%x\n%s\n", data, hex.EncodeToString(data))
-
 				fmt.Printf("%x\n", GETH_KEYS[0].Address)
 
-			} else if strings.Compare(cmd_args[0], "-g") == 0 {
-				test := util.MultiHashToBytes("QmZH5nN342Zcbk2HXPnEPbsavqjqj3pUcFV1S4pWyncYMg")
-				fmt.Printf("%x\n", test)
-				//ipfs.Publish(IPFS_SHELL, "QmNybj8qNJnLL8LRKKanVbZuwV9SCbN4YRXdm7Pwb7mZ6h")
+				gasPrice := GETH_CLIENT.EstimateGas(GETH_KEYS[0].Address.Hex(), &data)
+
+				fmt.Println("Estimated gasPrice: ", gasPrice)
+
+			} else if strings.Compare(cmd_args[0], "-st") == 0 {
+				hash := util.MultiHashToBytes("QmNybj8qNJnLL8LRKKanVbZuwV9SCbN4YRXdm7Pwb7mZ6h")
+
+				name := "testFile"
+				size := big.NewInt(10000)
+				ip := util.GetPublicIP()
+
+				ok := GETH_CLIENT.StoreRequest(GETH_KEYS[0], hash, name, size, ip)
+				if !ok {
+					fmt.Printf("OOps!\n")
+					break
+				}
+
+			} else if strings.Compare(cmd_args[0], "-pr") == 0 {
+				hash := util.MultiHashToBytes("QmNybj8qNJnLL8LRKKanVbZuwV9SCbN4YRXdm7Pwb7mZ6h")
+
+				ok := GETH_CLIENT.PurchaseRequest(GETH_KEYS[1], hash)
+				if !ok {
+					fmt.Printf("OOps!\n")
+					break
+				}
+			} else if strings.Compare(cmd_args[0], "-info") == 0 {
+				rawHash := util.MultiHashToBytes("QmNybj8qNJnLL8LRKKanVbZuwV9SCbN4YRXdm7Pwb7mZ6h")
+
+				fileName := GETH_CLIENT.GetFileName(GETH_KEYS[1].Address.String(), rawHash)
+				fmt.Printf("%s\n", fileName)
+
+				fileSize := GETH_CLIENT.GetFileSize(GETH_KEYS[1].Address.String(), rawHash)
+				fmt.Printf("%s\n", fileSize)
+
+				ownerAddr := GETH_CLIENT.IsOwnedBy(GETH_KEYS[1].Address.String(), rawHash)
+				fmt.Printf("%s\n", ownerAddr)
+
+				isRequested := GETH_CLIENT.IsRequested(GETH_KEYS[1].Address.String(), rawHash, GETH_KEYS[1].Address)
+				fmt.Printf("%t\n", isRequested)
+
+				isApproved := GETH_CLIENT.IsApproved(GETH_KEYS[1].Address.String(), rawHash, GETH_KEYS[1].Address)
+				fmt.Printf("%t\n", isApproved)
+
+				ownerAddr, ownerIP := GETH_CLIENT.GetOwnerInfo(GETH_KEYS[1].Address.String(), rawHash)
+				fmt.Printf("%s, %x\n", ownerAddr, ownerIP)
+
+				beforeHeight, err := GETH_CLIENT.EthBlockNumber()
+				if err != nil {
+					fmt.Printf("[-] Error occured: %s\n", err)
+					break
+				}
+
+				for {
+					currentHeight, err := GETH_CLIENT.EthBlockNumber()
+					if err != nil {
+						fmt.Printf("[-] Error occured: %s\n", err)
+						break
+					}
+					if currentHeight-beforeHeight > 2 {
+						break
+					}
+					time.Sleep(2 * time.Second)
+					fmt.Printf("before : %d , current : %d\r", beforeHeight, currentHeight)
+				}
 			}
 
 		case util.CMD_HELP:
@@ -143,7 +208,7 @@ func prompt() {
 				fmt.Println(err)
 			}
 			fmt.Println(accounts)
-		case util.CMD_BALANCE:
+		case util.CMD_ETHBALANCE:
 			balance := GETH_CLIENT.EthGetBalance(cmd_args[0])
 			fmt.Println(balance)
 		case util.CMD_SENDTX:
@@ -158,10 +223,11 @@ func prompt() {
 				fmt.Println(txhash)
 			*/
 		case util.CMD_UNLOCK:
-			pass := strings.TrimSpace(cmd_args[0])
-			time, _ := strconv.ParseUint(cmd_args[1], 10, 64)
+			addrIndex, _ := strconv.ParseInt(cmd_args[0], 10, 64)
+			pass := strings.TrimSpace(cmd_args[1])
+			time, _ := strconv.ParseUint(cmd_args[2], 10, 64)
 
-			response, err := GETH_CLIENT.PersonalUnlockAccount(GETH_KEYS[0].Address.Hex(), pass, time)
+			response, err := GETH_CLIENT.PersonalUnlockAccount(GETH_KEYS[addrIndex-1].Address.Hex(), pass, time)
 			if err != nil {
 				fmt.Println(err)
 			}
